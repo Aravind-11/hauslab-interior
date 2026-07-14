@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id          String             @id @default(cuid())
+  name        String
+  roomType    String             @map("room_type")
+  roomName    String             @map("room_name")
+  widthFt     Float              @map("width_ft")
+  depthFt     Float              @map("depth_ft")
+  wallColor   String             @map("wall_color")
+  floorColor  String             @map("floor_color")
+  floorPattern String            @map("floor_pattern")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  furniture   PlacedFurniture[]
+  ownerKey    String?            @map("owner_key") // anonymous browser session key
+
+  @@index([ownerKey])
+  @@index([updatedAt])
+  @@map("projects")
+}
+
+model PlacedFurniture {
+  id              String  @id @default(cuid())
+  projectId       String  @map("project_id")
+  furnitureId     String  @map("furniture_id")
+  x               Float
+  y               Float
+  rotation        Float   @default(0)
+  scale           Float   @default(1)
+  colorOverride   String? @map("color_override")
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("placed_furniture")
+}
+
+model MoodBoard {
+  id        String          @id @default(cuid())
+  name      String          @default("My mood board")
+  ownerKey  String?         @map("owner_key")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  items     MoodBoardItem[]
+
+  @@index([ownerKey])
+  @@map("mood_boards")
+}
+
+model MoodBoardItem {
+  id          String    @id @default(cuid())
+  moodBoardId String    @map("mood_board_id")
+  type        String
+  x           Float
+  y           Float
+  width       Float
+  height      Float
+  content     String
+  label       String?
+  rotation    Float     @default(0)
+  moodBoard   MoodBoard @relation(fields: [moodBoardId], references: [id], onDelete: Cascade)
+
+  @@index([moodBoardId])
+  @@map("mood_board_items")
+}
