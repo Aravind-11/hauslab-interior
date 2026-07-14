@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -51,9 +52,11 @@ export default function RootLayout({
       className={`${sans.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-cream text-ink">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AuthSessionProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AuthSessionProvider>
       </body>
     </html>
   );

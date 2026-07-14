@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/auth/user-menu";
 
 const NAV = [
   { href: "/studio", label: "Planner", icon: PenTool },
@@ -31,8 +32,8 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink/8 bg-cream/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-2.5">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink text-cream shadow-sm transition group-hover:bg-brass">
             <PenTool className="h-4 w-4" strokeWidth={2.2} />
           </span>
@@ -67,7 +68,8 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/studio" className="hidden sm:block">
+          <UserMenu />
+          <Link href="/studio" className="hidden md:block">
             <Button size="sm">Open planner</Button>
           </Link>
           <button
@@ -101,6 +103,13 @@ export function Navbar() {
                 </Link>
               );
             })}
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="mt-1 rounded-xl px-3 py-3 text-sm font-medium text-ink/70 hover:bg-ink/5"
+            >
+              Log in / Sign up
+            </Link>
           </nav>
         </div>
       )}

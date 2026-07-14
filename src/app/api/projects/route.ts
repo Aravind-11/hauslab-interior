@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getOwnerKey } from "@/lib/db/owner";
+import {
+  getIdentity,
+  ownershipCreate,
+  ownershipWhere,
+} from "@/lib/db/owner";
 import { projectToDesign } from "@/lib/db/mappers";
 import type { DesignProject } from "@/types";
 
@@ -8,14 +12,15 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const ownerKey = await getOwnerKey();
+    const identity = await getIdentity();
     const rows = await prisma.project.findMany({
-      where: { ownerKey },
+      where: ownershipWhere(identity),
       include: { furniture: true },
       orderBy: { updatedAt: "desc" },
     });
     return NextResponse.json({
       projects: rows.map(projectToDesign),
+      identity: identity.kind,
     });
   } catch (err) {
     console.error("GET /api/projects", err);
@@ -28,7 +33,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const ownerKey = await getOwnerKey();
+    const identity = await getIdentity();
     const body = (await req.json()) as { project: DesignProject };
     const p = body.project;
     if (!p?.name || !p?.room) {
@@ -36,7 +41,9 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = p.id
-      ? await prisma.project.findFirst({ where: { id: p.id, ownerKey } })
+      ? await prisma.project.findFirst({
+          where: { id: p.id, ...ownershipWhere(identity) },
+        })
       : null;
 
     if (existing) {
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
         wallColor: p.room.wallColor,
         floorColor: p.room.floorColor,
         floorPattern: p.room.floorPattern,
-        ownerKey,
+        ...ownershipCreate(identity),
         furniture: {
           create: p.furniture.map((f) => ({
             furnitureId: f.furnitureId,

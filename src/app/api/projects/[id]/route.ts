@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getOwnerKey } from "@/lib/db/owner";
+import { getIdentity, ownershipWhere } from "@/lib/db/owner";
 import { projectToDesign } from "@/lib/db/mappers";
 
 export const runtime = "nodejs";
@@ -10,9 +10,9 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
-    const ownerKey = await getOwnerKey();
+    const identity = await getIdentity();
     const row = await prisma.project.findFirst({
-      where: { id, ownerKey },
+      where: { id, ...ownershipWhere(identity) },
       include: { furniture: true },
     });
     if (!row) {
@@ -28,8 +28,10 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
-    const ownerKey = await getOwnerKey();
-    const row = await prisma.project.findFirst({ where: { id, ownerKey } });
+    const identity = await getIdentity();
+    const row = await prisma.project.findFirst({
+      where: { id, ...ownershipWhere(identity) },
+    });
     if (!row) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

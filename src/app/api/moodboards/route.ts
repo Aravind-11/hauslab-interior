@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getOwnerKey } from "@/lib/db/owner";
+import {
+  getIdentity,
+  ownershipCreate,
+  ownershipWhere,
+} from "@/lib/db/owner";
 import { rowToMoodItem } from "@/lib/db/mappers";
 import type { MoodBoardItem } from "@/types";
 
@@ -8,15 +12,18 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const ownerKey = await getOwnerKey();
+    const identity = await getIdentity();
     let board = await prisma.moodBoard.findFirst({
-      where: { ownerKey },
+      where: ownershipWhere(identity),
       include: { items: true },
       orderBy: { updatedAt: "desc" },
     });
     if (!board) {
       board = await prisma.moodBoard.create({
-        data: { ownerKey, name: "My mood board" },
+        data: {
+          name: "My mood board",
+          ...ownershipCreate(identity),
+        },
         include: { items: true },
       });
     }
@@ -24,6 +31,7 @@ export async function GET() {
       id: board.id,
       name: board.name,
       items: board.items.map(rowToMoodItem),
+      identity: identity.kind,
     });
   } catch (err) {
     console.error("GET /api/moodboards", err);
@@ -33,16 +41,21 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const ownerKey = await getOwnerKey();
+    const identity = await getIdentity();
     const body = (await req.json()) as {
       name?: string;
       items: MoodBoardItem[];
     };
 
-    let board = await prisma.moodBoard.findFirst({ where: { ownerKey } });
+    let board = await prisma.moodBoard.findFirst({
+      where: ownershipWhere(identity),
+    });
     if (!board) {
       board = await prisma.moodBoard.create({
-        data: { ownerKey, name: body.name ?? "My mood board" },
+        data: {
+          name: body.name ?? "My mood board",
+          ...ownershipCreate(identity),
+        },
       });
     } else if (body.name) {
       board = await prisma.moodBoard.update({

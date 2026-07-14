@@ -7,36 +7,52 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String?
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  projects     Project[]
+  moodBoards   MoodBoard[]
+
+  @@map("users")
+}
+
 model Project {
-  id          String             @id @default(cuid())
-  name        String
-  roomType    String             @map("room_type")
-  roomName    String             @map("room_name")
-  widthFt     Float              @map("width_ft")
-  depthFt     Float              @map("depth_ft")
-  wallColor   String             @map("wall_color")
-  floorColor  String             @map("floor_color")
+  id           String            @id @default(cuid())
+  name         String
+  roomType     String            @map("room_type")
+  roomName     String            @map("room_name")
+  widthFt      Float             @map("width_ft")
+  depthFt      Float             @map("depth_ft")
+  wallColor    String            @map("wall_color")
+  floorColor   String            @map("floor_color")
   floorPattern String            @map("floor_pattern")
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
-  furniture   PlacedFurniture[]
-  ownerKey    String?            @map("owner_key") // anonymous browser session key
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  furniture    PlacedFurniture[]
+  ownerKey     String?           @map("owner_key")
+  userId       String?           @map("user_id")
+  user         User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ownerKey])
+  @@index([userId])
   @@index([updatedAt])
   @@map("projects")
 }
 
 model PlacedFurniture {
-  id              String  @id @default(cuid())
-  projectId       String  @map("project_id")
-  furnitureId     String  @map("furniture_id")
-  x               Float
-  y               Float
-  rotation        Float   @default(0)
-  scale           Float   @default(1)
-  colorOverride   String? @map("color_override")
-  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id            String  @id @default(cuid())
+  projectId     String  @map("project_id")
+  furnitureId   String  @map("furniture_id")
+  x             Float
+  y             Float
+  rotation      Float   @default(0)
+  scale         Float   @default(1)
+  colorOverride String? @map("color_override")
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
   @@map("placed_furniture")
@@ -46,11 +62,14 @@ model MoodBoard {
   id        String          @id @default(cuid())
   name      String          @default("My mood board")
   ownerKey  String?         @map("owner_key")
+  userId    String?         @map("user_id")
+  user      User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime        @default(now()) @map("created_at")
   updatedAt DateTime        @updatedAt @map("updated_at")
   items     MoodBoardItem[]
 
   @@index([ownerKey])
+  @@index([userId])
   @@map("mood_boards")
 }
 

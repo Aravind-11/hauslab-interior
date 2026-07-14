@@ -23,6 +23,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import type { DesignProject } from "@/types";
 import {
   deleteCloudProject,
@@ -59,6 +61,7 @@ export function StudioToolbar() {
   const [showCloud, setShowCloud] = useState(false);
   // keep id when loading from cloud
   const setProjectDirect = useDesignStore.setState;
+  const { data: session } = useSession();
 
   const selected = project.furniture.find((f) => f.instanceId === selectedId);
   const selectedItem = selected ? getFurnitureById(selected.furnitureId) : null;
@@ -194,6 +197,19 @@ export function StudioToolbar() {
             Export
           </Button>
         </div>
+        <p className="mt-2 text-[11px] text-ink/45">
+          {session?.user ? (
+            <>Signed in as <span className="font-medium text-ink/70">{session.user.email}</span> — cloud saves sync to your account.</>
+          ) : (
+            <>
+              Guest mode — cloud saves stay on this browser.{" "}
+              <Link href="/login" className="font-medium text-brass-dark hover:underline">
+                Log in
+              </Link>{" "}
+              to sync across devices.
+            </>
+          )}
+        </p>
         {savedToast && (
           <p className="mt-2 text-xs font-medium text-emerald-700">{savedToast}</p>
         )}
